@@ -1,0 +1,56 @@
+VERSION ""
+
+NS_ :
+
+BS_:
+
+BU_: BMS DIF DI UIManager VCFRONT VCLEFT VCRIGHT
+
+BO_ 658 BMS_socStatus: 8 BMS
+ SG_ BMS_uiSoc : 1|10@1+ (0.1,0) [0|100] "%" Vector__XXX
+ SG_ BMS_hvacMaxV : 11|10@1+ (0.1,0) [0|0] "V" Vector__XXX
+
+BO_ 599 UI_vehicleSpeed: 8 UIManager
+ SG_ UI_vehicleSpeed : 12|9@1+ (0.1,0) [0|0] "mph" Vector__XXX
+ SG_ UI_vehicleSpeedValid : 11|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ UI_prndState : 0|4@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 562 BMS_status: 8 BMS
+ SG_ BMS_chargeStatus : 8|4@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ BMS_contactorState : 28|4@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ BMS_chargeLineVoltage : 32|14@1+ (0.1,0) [0|0] "V" Vector__XXX
+
+BO_ 676 BMS_thermalStatus: 8 BMS
+ SG_ BMS_minBattTemperature : 0|9@1- (0.5,-40) [-40|65] "degC" Vector__XXX
+ SG_ BMS_maxBattTemperature : 9|9@1- (0.5,-40) [-40|65] "degC" Vector__XXX
+ SG_ BMS_battRawAvgTemperature : 18|9@1- (0.5,-40) [-40|65] "degC" Vector__XXX
+
+BO_ 258 DIF_torque: 8 DIF
+ SG_ DIF_torqueActual : 0|13@1- (0.25,0) [-1000|1000] "Nm" Vector__XXX
+ SG_ DIF_torqueDesired : 13|13@1- (0.25,0) [-1000|1000] "Nm" Vector__XXX
+
+BO_ 264 DI_speed: 8 DI
+ SG_ DI_vehicleSpeed : 12|9@1+ (0.1,0) [0|0] "mph" Vector__XXX
+ SG_ DI_speedUnits : 0|2@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 692 BMS_powerAvailable: 8 BMS
+ SG_ BMS_maxRegenPower : 0|14@1+ (0.01,0) [0|0] "kW" Vector__XXX
+ SG_ BMS_maxDischargePower : 14|14@1+ (0.01,0) [0|0] "kW" Vector__XXX
+
+BO_ 514 DI_odometer: 8 DI
+ SG_ DI_odometer : 8|32@1+ (0.001,0) [0|0] "km" Vector__XXX
+
+BO_ 1378 VCFRONT_hvacRequest: 8 VCFRONT
+ SG_ VCFRONT_hvacOn : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCFRONT_cabinTemp : 8|8@1+ (0.5,-40) [-40|87.5] "degC" Vector__XXX
+
+BO_ 887 VCLEFT_doorStatus: 8 VCLEFT
+ SG_ VCLEFT_frontDoorOpen : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCLEFT_rearDoorOpen : 1|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCLEFT_trunkOpen : 2|1@1+ (1,0) [0|1] "" Vector__XXX
+
+BO_ 888 VCRIGHT_doorStatus: 8 VCRIGHT
+ SG_ VCRIGHT_frontDoorOpen : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCRIGHT_rearDoorOpen : 1|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCRIGHT_frunkOpen : 2|1@1+ (1,0) [0|1] "" Vector__XXX
+

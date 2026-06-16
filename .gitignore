@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+tescan.db
+
+# Node / React Native
+node_modules/
+.expo/
+android/android/build/
+android/android/.gradle/
+android/android/app/build/
+android/ios/build/
+android/.bundle/
+*.keystore
+!debug.keystore
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.metro-health-check*
+.yarn/
+
+# PlatformIO
+esp32/.pio/
+esp32/.vscode/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Secrets / local config
+*.env
+.env.*
+config.local.yaml

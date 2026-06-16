@@ -1,0 +1,22 @@
+esp32:
+  host: "192.168.4.1"       # ESP32 SoftAP default IP (change for infrastructure mode)
+  port: 81
+  reconnect_interval: 5     # seconds between reconnect attempts
+
+mock:
+  enabled: true             # set false when real ESP32 is present
+  tick_rate: 0.05           # seconds between simulated frame bursts
+
+server:
+  host: "0.0.0.0"
+  port: 8000
+  cors_origins:
+    - "*"
+
+storage:
+  db_path: "tescan.db"
+  retention_days: 30
+
+dbc:
+  paths:
+    - "dbc/tesla_model3.dbc"

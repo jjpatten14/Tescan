@@ -1,0 +1,8 @@
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+websockets==13.1
+cantools==41.4.3
+aiosqlite==0.20.0
+pydantic==2.9.2
+pyyaml==6.0.2
+python-multipart==0.0.12
