@@ -130,23 +130,23 @@ dot(BX,BY+BH-1.3,P12); t(BX+0.15,BY+BH-1.3,'IN',P12,8,ha='left')
 dot(BX+BW,BY+BH-1.3,P5); t(BX+BW-0.15,BY+BH-1.3,'OUT',P5,8,ha='right')
 t(BX+BW/2,BY+BH+0.30,'── POWER REGULATION ──',P5,8,bold=True)
 
-# ─── ESP32 DevKit V1 ──────────────────────────────────────────────────────────
+# ─── Seeed Studio XIAO ESP32C6 ───────────────────────────────────────────────
 EX,EY,EW,EH=13.5,4.2,7.5,9.5
 rbox(EX,EY,EW,EH,'#58a6ff','#0a1628',lw=3)
-t(EX+EW/2,EY+EH-0.50,'ESP32  DevKit V1','#58a6ff',13,bold=True)
-t(EX+EW/2,EY+EH-0.96,'38-pin · 240 MHz dual-core · 520 KB SRAM',TXT2,8.5)
-t(EX+EW/2,EY+EH-1.35,'CP2102 USB-Serial  ·  Micro-USB',TXT2,8,italic=True)
+t(EX+EW/2,EY+EH-0.50,'Seeed  XIAO  ESP32C6','#58a6ff',13,bold=True)
+t(EX+EW/2,EY+EH-0.96,'RISC-V · WiFi 6 · BLE 5.3 · USB-C · 4 MB Flash',TXT2,8.5)
+t(EX+EW/2,EY+EH-1.35,'21 × 17.5 mm  ·  castellated pads  ·  thumb-sized',TXT2,8,italic=True)
 rbox(EX+0.55,EY+EH-3.3,EW-1.1,1.65,BLE,'#0d0820',lw=1.8,r=0.1)
-t(EX+EW/2,EY+EH-2.12,'✦  Bluetooth Low Energy  ✦',BLE,10.5,bold=True)
+t(EX+EW/2,EY+EH-2.12,'✦  Bluetooth Low Energy 5.3  ✦',BLE,10.5,bold=True)
 t(EX+EW/2,EY+EH-2.57,'Nordic UART Service  (NUS)',BLE,9)
 t(EX+EW/2,EY+EH-2.96,'Advertises as:  "TESCAN"',TXT2,8,italic=True)
 ax.plot([EX+0.4,EX+EW-0.4],[EY+EH-3.55]*2,color=BORD,linewidth=1.5)
-t(EX+EW/2,EY+EH-3.88,'GPIO Assignments',TXT2,8.5,italic=True)
-EP=[('GPIO 21  TWAI TX  →  CTX',VEH,EY+EH-4.5),
-    ('GPIO 22  TWAI RX  ←  CRX',VEH,EY+EH-5.3),
-    ('VIN           +5V in',     P5, EY+EH-6.4),
-    ('3.3V  →  3V3 (xcvr)',      P33,EY+EH-7.2),
-    ('GND   common',             GND,EY+EH-8.0)]
+t(EX+EW/2,EY+EH-3.88,'Pin Assignments  (XIAO pad labels)',TXT2,8.5,italic=True)
+EP=[('D2  GPIO4  TWAI TX  →  CTX',VEH,EY+EH-4.5),
+    ('D3  GPIO5  TWAI RX  ←  CRX',VEH,EY+EH-5.3),
+    ('VBUS      +5V in',           P5, EY+EH-6.4),
+    ('3V3  →  3V3 (xcvr)',         P33,EY+EH-7.2),
+    ('GND   common',               GND,EY+EH-8.0)]
 for nm,c,py in EP:
     t(EX+0.18,py,nm,c,9,ha='left'); dot(EX,py,c,80)
 
@@ -210,7 +210,7 @@ NX,NY,NW,NH=13.5,0.35,10.1,3.5
 rbox(NX,NY,NW,NH,BORD,'#0f1520',lw=1.5)
 t(NX+NW/2,NY+NH-0.45,'PARTS  LIST  &  INSTALL  NOTE',TXT2,9,bold=True)
 for i,(c,note) in enumerate([
-        (P33, 'ESP32 DevKit V1  ·  SN65HVD230 module  (blue PCB)'),
+        (P33, 'Seeed XIAO ESP32C6  ·  SN65HVD230 module  (blue PCB)'),
         (VEH, 'P6KE6.8CA TVS x2  ·  LM2596 buck module  ·  1N5819 x1'),
         (P12, '3A ATO fuse + holder  ·  prototype through-hole board'),
         (TXT, 'Coupler into rear center console OBD-II port — plug & play'),
