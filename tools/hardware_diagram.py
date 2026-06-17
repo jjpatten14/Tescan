@@ -188,10 +188,11 @@ wire([(VTRX,VTY+VTH-2.4),(12.1,VTY+VTH-2.4),(12.1,EP[1][2]),(EX,EP[1][2])], VEH,
 # 3V3: XIAO → SN65HVD230  (vertical at x=5.1 — separate from CAN wires)
 wire([(EX,EP[3][2]),(5.1,EP[3][2]),(5.1,VTY+VTH-3.2),(VTX,VTY+VTH-3.2)], P33, lw=1.8)
 
-# GND: XIAO → SN65HVD230 → OBD coupler GND
-RGND=4.6
-wire([(EX,EP[4][2]),(RGND,EP[4][2]),(RGND,VTY+VTH-4.0),(VTX,VTY+VTH-4.0)], GND, lw=1.8)
-wire([(RGND,EP[4][2]),(RGND,W_GD),(PRX,W_GD)], GND, lw=2)
+# GND: clean bus at y=4.4, below all power components (fuse bottom=5.3, buck bottom=4.9)
+GND_Y = 4.4
+wire([(EX,EP[4][2]),(12.0,EP[4][2]),(12.0,GND_Y),(PRX,GND_Y)], GND, lw=2)  # XIAO → bus
+wire([(PRX,GND_Y),(PRX,W_GD)], GND, lw=2)                                    # bus → OBD GND pin
+wire([(4.9,GND_Y),(4.9,VTY+VTH-4.0),(VTX,VTY+VTH-4.0)], GND, lw=1.8)       # bus → xcvr GND
 
 # Power: OBD +12V → Pico fuse → 1N5819 → LM2596 → XIAO VBUS
 wire([(PRX,W_12),(3.0,W_12),(3.0,FY+0.48),(FX,FY+0.48)], P12)
