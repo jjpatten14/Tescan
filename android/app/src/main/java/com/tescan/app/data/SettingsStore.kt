@@ -9,20 +9,19 @@ import kotlinx.coroutines.flow.map
 
 private val Context.dataStore by preferencesDataStore(name = "tescan_settings")
 
-/** Persists the backend address (IP:PORT). */
 class SettingsStore(private val context: Context) {
 
-    private val backendKey = stringPreferencesKey("backend_url")
+    private val bleKey = stringPreferencesKey("ble_device_name")
 
-    val backendUrl: Flow<String> = context.dataStore.data.map { prefs ->
-        prefs[backendKey] ?: DEFAULT_BACKEND
+    val bleDeviceName: Flow<String> = context.dataStore.data.map { prefs ->
+        prefs[bleKey] ?: DEFAULT_DEVICE_NAME
     }
 
-    suspend fun setBackendUrl(value: String) {
-        context.dataStore.edit { it[backendKey] = value.trim() }
+    suspend fun setBleDeviceName(value: String) {
+        context.dataStore.edit { it[bleKey] = value.trim() }
     }
 
     companion object {
-        const val DEFAULT_BACKEND = "192.168.4.2:8000"
+        const val DEFAULT_DEVICE_NAME = "TESCAN"
     }
 }

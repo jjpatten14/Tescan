@@ -7,167 +7,37 @@
 ## Hardware / ESP32
 
 - [x] Vehicle bus CAN reader (TWAI normal mode, 500kbps, GPIO 21/22)
-- [x] Chassis bus CAN reader (MCP2515 SPI, listen-only, TX pin disconnected)
-- [x] WebSocket server on port 81
-- [x] Broadcast vehicle bus frames as JSON `{id, data, bus, ts}`
-- [x] Broadcast chassis bus frames as JSON `{id, data, bus, ts}`
-- [x] Accept write commands from backend (vehicle bus only)
-- [x] Refuse chassis bus write commands in firmware (software guard)
-- [x] WiFi connection with reboot-on-fail recovery
+- [x] BLE NUS server (NimBLE-Arduino, Nordic UART Service)
+- [x] Broadcast vehicle bus frames as JSON `{id, data, bus, ts}` over BLE NOTIFY
+- [x] Accept write commands from Android (vehicle bus only)
+- [x] Refuse non-vehicle bus write commands in firmware (safety guard)
+- [ ] Chassis bus CAN reader — deferred, satellite ESP32 under seat
 - [ ] `pio run` compiles clean (needs PlatformIO + internet)
 - [ ] Tested on bench with 2018 Model 3 OBD-II port
 
 ---
 
-## Backend — Core
+## Android App — BLE & CAN Decode
 
-- [x] CAN decoder with Tesla Model 3 2018 DBC signals
-- [x] Mock data source (simulate drive + charge cycle without hardware)
-- [x] ESP32 WebSocket client with auto-reconnect
-- [x] SQLite storage (snapshots + raw frames)
-- [x] Snapshot logger (1 snapshot/sec to DB)
-- [x] Data retention / purge (configurable, default 30 days)
-- [x] Config file (YAML) for ESP32 IP, mock mode, DB path
-
----
-
-## Backend — Vehicle Monitoring
-
-- [ ] Battery SOC (`BMS_uiSoc`)
-- [ ] Vehicle speed (`UI_vehicleSpeed` / `DI_vehicleSpeed`)
-- [ ] Instantaneous power (derived from torque + speed or discharge signal)
-- [ ] Drive torque (`DIF_torqueActual`)
-- [ ] Battery temp min/max (`BMS_thermalStatus`)
-- [ ] Estimated range (SOC × rated range fallback)
-- [ ] Charging state: idle / AC / DC (`BMS_chargeStatus`)
-- [ ] Charge rate kW
-- [ ] Odometer (`DI_odometer`)
-- [ ] HVAC on/off (`VCFRONT_hvacOn`)
-- [ ] Cabin temperature (`VCFRONT_cabinTemp`)
-- [ ] Door status — all 6 positions (chassis bus)
+- [x] BleManager: scan by device name, GATT connect, NUS service discovery
+- [x] Enable NOTIFY on TX characteristic (CCCD descriptor write)
+- [x] Buffer incoming BLE bytes, split on newline, parse JSON frames
+- [x] CanDecoder: local CAN signal extraction (little-endian bit extraction)
+- [x] Decode BMS_uiSoc (0x292) → SOC %
+- [x] Decode UI_vehicleSpeed (0x257) → speed mph/kmh
+- [x] Decode DIF_torqueActual (0x102) → torque Nm
+- [x] Decode BMS_thermalStatus (0x2A4) → battery temp min/max
+- [x] Decode BMS_chargeStatus (0x232) → idle/AC/DC
+- [x] Decode DI_odometer (0x202) → odometer km
+- [x] Derive power kW from torque + speed (Model 3 LR gear/wheel constants)
+- [x] Estimate range from SOC × 499 km
+- [x] Auto-reconnect BLE on disconnect (3s delay, re-scan)
+- [x] Send write commands to ESP32 via BLE RX characteristic
+- [x] BLE runtime permissions (Android 12+: BLUETOOTH_SCAN + BLUETOOTH_CONNECT)
+- [ ] `./gradlew assembleDebug` builds clean
+- [ ] Verified running on device against real ESP32
 
 ---
-
-## Backend — Battery Health
-
-- [ ] Record capacity measurement after each charge > 5 kWh
-- [ ] Track full charge cycle count
-- [ ] Calculate degradation % vs. rated new capacity
-- [ ] Store health history in SQLite for trend graph
-- [ ] REST endpoint: `GET /api/v1/battery/health`
-
----
-
-## Backend — Trip History
-
-- [ ] Detect drive start / end (speed transitions)
-- [ ] Log trip: start time, end time, distance, energy used, avg efficiency
-- [ ] Map route: store GPS or reconstruct from odometer + heading if available
-- [ ] REST endpoint: `GET /api/v1/trips`
-- [ ] REST endpoint: `GET /api/v1/trips/{id}`
-
----
-
-## Backend — Charging History
-
-- [ ] Detect charge session start / end
-- [ ] Log session: start SOC, end SOC, kWh added, duration, location tag
-- [ ] Per-location electricity rate (set in config or via API)
-- [ ] Calculate cost per session
-- [ ] REST endpoint: `GET /api/v1/charges`
-
----
-
-## Backend — Profiler (Real-Time CAN Dashboard)
-
-- [ ] Stream all decoded signals to WebSocket subscribers in real time
-- [ ] Organize signals into categories: Performance, Charging, Climate, Safety
-- [ ] REST endpoint: `GET /api/v1/profiler/signals` (list available signals)
-- [ ] WebSocket: `WS /ws/profiler` (high-frequency raw signal stream)
-- [ ] Signal metadata: name, unit, min, max, last value, last update time
-
----
-
-## Backend — Vehicle Controls (Vehicle Bus Writes)
-
-- [ ] Wake car from sleep
-- [ ] Lock / unlock doors
-- [ ] Climate on/off
-- [ ] Set climate temperature
-- [ ] Defrost front / rear
-- [ ] Flash lights
-- [ ] Honk horn
-- [ ] Open / close charge port
-- [ ] Vent / close windows
-- [ ] Enable / disable Sentry Mode
-- [ ] Enable / disable Valet Mode
-- [ ] POST endpoint: `POST /api/v1/command/{action}`
-
----
-
-## Backend — Sentry Mode
-
-- [ ] Detect Sentry events from chassis bus
-- [ ] Log event: timestamp, type (motion / alarm)
-- [ ] Push notification on Sentry trigger
-- [ ] REST endpoint: `GET /api/v1/sentry/events`
-
----
-
-## Backend — Notifications & Alerts
-
-- [ ] Charge complete notification
-- [ ] Charge level threshold alert (configurable %)
-- [ ] Low battery warning
-- [ ] Sentry event alert
-- [ ] Drive started / ended
-- [ ] Notification delivery mechanism (push to Android app)
-
----
-
-## Backend — Automations
-
-- [ ] Automation engine (cloud-side, runs without phone)
-- [ ] Trigger: schedule (time + day of week)
-- [ ] Trigger: charge started / stopped
-- [ ] Trigger: SOC threshold crossed
-- [ ] Trigger: Sentry event
-- [ ] Action: climate on/off / set temp
-- [ ] Action: lock / unlock
-- [ ] Action: Sentry Mode on/off
-- [ ] Action: flash lights / honk
-- [ ] Action: send notification
-- [ ] CRUD endpoints: `GET/POST/PUT/DELETE /api/v1/automations`
-
----
-
-## Backend — History / Statistics
-
-- [ ] `GET /api/v1/history` (time-series SOC, power, speed — downsampled)
-- [ ] `GET /api/v1/stats/energy` (total kWh driven, charged, phantom drain)
-- [ ] `GET /api/v1/stats/efficiency` (avg Wh/km over date range)
-
----
-
-## Backend — API & WebSocket
-
-- [x] `GET  /api/v1/health` — status, mode (mock/live), ESP32 connected
-- [x] `GET  /api/v1/status` — current VehicleSnapshot
-- [x] `GET  /api/v1/history` — historical snapshots (downsampled)
-- [x] `POST /api/v1/write` — send CAN frame to vehicle bus
-- [x] `POST /api/v1/settings` — update ESP32 host/port
-- [x] `WS   /ws/live` — broadcast VehicleSnapshot every 200ms
-
----
-
-## Android App
-
-**Stack:** Native Kotlin + Jetpack Compose + Gradle (Android Studio project).
-compileSdk 35, minSdk 26. Networking via OkHttp + kotlinx.serialization.
-DataStore for settings. (Replaced the earlier React Native prototype.)
-
-- [ ] `./gradlew assembleDebug` builds clean (needs internet for Maven — build in Android Studio)
-- [ ] Verified running on device / emulator against mock backend
 
 ## Android App — Dashboard
 
@@ -183,14 +53,25 @@ DataStore for settings. (Replaced the earlier React Native prototype.)
 
 ---
 
+## Android App — Settings Screen
+
+- [x] BLE device name input (replaces backend IP)
+- [x] Save & Reconnect
+- [x] Check Status button (shows BLE connection state)
+- [x] BLE connection status indicator
+- [x] Chassis bus deferred notice
+- [ ] Notification preferences
+
+---
+
 ## Android App — History Screen
 
 - [x] Time range selector (1h / 6h / 24h / 7d)
 - [x] SOC over time chart (Compose Canvas line chart)
 - [x] Power over time chart
+- [ ] History backed by local SQLite (currently returns empty list)
 - [ ] Speed over time chart
 - [ ] Trip list view
-- [ ] Charging session list
 
 ---
 
@@ -211,28 +92,18 @@ DataStore for settings. (Replaced the earlier React Native prototype.)
 
 - [ ] Profiler screen (not yet built)
 - [ ] Signal list grouped by category
-- [ ] Live value streaming via WebSocket
-- [ ] Signal detail view (min/max/current/unit)
+- [ ] Live value display
 
 ---
 
-## Android App — Sentry Screen
+## Chassis Bus (Satellite ESP32) — Deferred
 
-- [ ] Sentry event list (not yet built)
-- [ ] Event detail with map pin and timestamp
-
----
-
-## Android App — Settings Screen
-
-- [x] Backend IP/port input
-- [x] Save & reconnect
-- [x] Test connection button
-- [x] WebSocket status display
-- [x] Chassis bus safety warning
-- [ ] Notification preferences
-- [ ] Automation management (basic)
-- [ ] Electricity rate per location
+- [ ] Deferred — satellite ESP32 under seat
+- [ ] MCP2515 SPI CAN controller, listen-only mode, TX pin disconnected
+- [ ] Chassis bus CANH/CANL: OBD pin 3/11
+- [ ] Bridge chassis frames to Android over BLE (second NUS connection or same device)
+- [ ] Door status — all 6 positions (chassis bus signal)
+- [ ] Sentry events from chassis bus
 
 ---
 
@@ -244,9 +115,20 @@ DataStore for settings. (Replaced the earlier React Native prototype.)
 - [ ] Validate `BMS_status` charge state enum values
 - [ ] Validate `DIF_torqueActual` bit position and sign
 - [ ] Validate `DI_odometer` scale and offset
-- [ ] Validate chassis bus signal bit positions
-- [ ] End-to-end test: mock encode → decode → correct values
-- [ ] End-to-end test: real ESP32 frames → correct decoded values
+- [ ] End-to-end test: mock encode → CanDecoder → correct values
+- [ ] End-to-end test: real ESP32 BLE frames → correct decoded values
+
+---
+
+## Backend — Core (Legacy / Future)
+
+The Python backend is not required for real-time data (Android decodes locally).
+Retained for potential future use: trip storage, remote access, notifications.
+
+- [x] CAN decoder with Tesla Model 3 2018 DBC signals
+- [x] Mock data source
+- [x] SQLite storage
+- [ ] Migrate to BLE-based ESP32 client if reconnected
 
 ---
 
@@ -255,9 +137,7 @@ DataStore for settings. (Replaced the earlier React Native prototype.)
 - [x] Project directory structure
 - [x] `.gitignore`
 - [x] `README.md`
-- [x] `backend/requirements.txt`
-- [x] `backend/config.yaml`
-- [x] ESP32 PlatformIO project (modular: main/config/can_vehicle/can_chassis/ws_server)
+- [x] ESP32 PlatformIO project (main / config / can_vehicle / ble_server)
 - [x] Android native Gradle project + wrapper (opens in Android Studio)
 - [ ] `backend/requirements.txt` — pip install verified clean
 - [ ] Android `./gradlew assembleDebug` — compiles without errors

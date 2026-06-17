@@ -1,9 +1,13 @@
 package com.tescan.app
 
+import android.Manifest
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
@@ -17,7 +21,11 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -29,9 +37,9 @@ import androidx.navigation.compose.rememberNavController
 import com.tescan.app.ui.dashboard.DashboardScreen
 import com.tescan.app.ui.history.HistoryScreen
 import com.tescan.app.ui.settings.SettingsScreen
+import com.tescan.app.ui.theme.OnSurfaceMuted
 import com.tescan.app.ui.theme.Surface
 import com.tescan.app.ui.theme.TeslaGreen
-import com.tescan.app.ui.theme.OnSurfaceMuted
 import com.tescan.app.ui.theme.TescanTheme
 
 private enum class Dest(val route: String, val label: String, val icon: ImageVector) {
@@ -50,6 +58,33 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun TescanRoot() {
+    var permissionsGranted by remember { mutableStateOf(false) }
+
+    val blePermissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        arrayOf(
+            Manifest.permission.BLUETOOTH_SCAN,
+            Manifest.permission.BLUETOOTH_CONNECT,
+        )
+    } else {
+        emptyArray()
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { results ->
+        permissionsGranted = results.values.all { it } || blePermissions.isEmpty()
+    }
+
+    LaunchedEffect(Unit) {
+        if (blePermissions.isEmpty()) {
+            permissionsGranted = true
+        } else {
+            permissionLauncher.launch(blePermissions)
+        }
+    }
+
+    if (!permissionsGranted) return
+
     val navController = rememberNavController()
     val backStack by navController.currentBackStackEntryAsState()
     val currentRoute = backStack?.destination?.route

@@ -1,5 +1,7 @@
 package com.tescan.app.ui.settings
 
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,8 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.border
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -17,11 +17,11 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,29 +39,29 @@ import com.tescan.app.ui.theme.TeslaRed
 
 @Composable
 fun SettingsScreen(vm: SettingsViewModel = viewModel()) {
-    val backend by vm.backend.collectAsStateWithLifecycle()
+    val deviceName by vm.deviceName.collectAsStateWithLifecycle()
     val status by vm.status.collectAsStateWithLifecycle()
     val testResult by vm.testResult.collectAsStateWithLifecycle()
 
-    var input by remember { mutableStateOf(backend) }
-    LaunchedEffect(backend) { input = backend }
+    var input by remember { mutableStateOf(deviceName) }
+    LaunchedEffect(deviceName) { input = deviceName }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Text("Settings", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 16.dp, top = 4.dp))
 
-        // Connection status
+        // BLE connection status
         Card(
             modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(containerColor = Surface),
         ) {
             Column(Modifier.padding(16.dp)) {
-                Text("Connection", color = Color.White, fontWeight = FontWeight.SemiBold)
+                Text("BLE Connection", color = Color.White, fontWeight = FontWeight.SemiBold)
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
                     val (c, label) = when (status) {
                         ConnectionStatus.CONNECTED -> TeslaGreen to "Connected"
-                        ConnectionStatus.CONNECTING -> TeslaAmber to "Connecting…"
+                        ConnectionStatus.CONNECTING -> TeslaAmber to "Scanning…"
                         ConnectionStatus.DISCONNECTED -> TeslaRed to "Disconnected"
                     }
                     Canvas(modifier = Modifier.size(10.dp)) { drawCircle(c) }
@@ -70,20 +70,21 @@ fun SettingsScreen(vm: SettingsViewModel = viewModel()) {
             }
         }
 
-        // Backend address
+        // BLE device name
         Card(
             modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(containerColor = Surface),
         ) {
             Column(Modifier.padding(16.dp)) {
-                Text("Backend Address", color = Color.White, fontWeight = FontWeight.SemiBold)
-                Text("IP:PORT of the machine running the Python backend",
+                Text("BLE Device Name", color = Color.White, fontWeight = FontWeight.SemiBold)
+                Text("Name advertised by the ESP32 (default: TESCAN)",
                     color = OnSurfaceMuted, fontSize = 12.sp, modifier = Modifier.padding(vertical = 6.dp))
                 OutlinedTextField(
                     value = input,
                     onValueChange = { input = it },
                     singleLine = true,
+                    placeholder = { Text("TESCAN") },
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Row(modifier = Modifier.padding(top = 12.dp)) {
@@ -92,7 +93,7 @@ fun SettingsScreen(vm: SettingsViewModel = viewModel()) {
                         colors = ButtonDefaults.buttonColors(containerColor = TeslaGreen),
                         modifier = Modifier.padding(end = 10.dp),
                     ) { Text("Save & Reconnect", color = Color.Black) }
-                    Button(onClick = { vm.testConnection() }) { Text("Test") }
+                    Button(onClick = { vm.testConnection() }) { Text("Check Status") }
                 }
                 testResult?.let {
                     Text(it, color = OnSurfaceMuted, fontSize = 13.sp, modifier = Modifier.padding(top = 10.dp))
@@ -100,18 +101,18 @@ fun SettingsScreen(vm: SettingsViewModel = viewModel()) {
             }
         }
 
-        // Chassis safety notice
+        // Chassis bus safety notice (deferred but kept for awareness)
         Card(
             modifier = Modifier.fillMaxWidth().border(1.dp, TeslaAmber, RoundedCornerShape(12.dp)),
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(containerColor = Color(0xFF2A1A00)),
         ) {
             Column(Modifier.padding(16.dp)) {
-                Text("⚠ Chassis Bus", color = TeslaAmber, fontWeight = FontWeight.Bold)
+                Text("Chassis Bus", color = TeslaAmber, fontWeight = FontWeight.Bold)
                 Text(
-                    "The chassis bus is strictly read-only. Writing to it can cause loss of " +
-                        "vehicle control. Hardware and software protections enforce this — do not " +
-                        "modify the ESP32 firmware or wiring to bypass them.",
+                    "Chassis bus access is deferred — a satellite ESP32 under the seat will " +
+                        "handle it in a future release. The chassis bus carries ABS, steering, " +
+                        "airbag and stability-control traffic and is strictly read-only.",
                     color = Color(0xFFCC8800), fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp),
                 )
             }
