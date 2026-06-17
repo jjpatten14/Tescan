@@ -6,14 +6,15 @@
 
 ## Hardware / ESP32
 
-- [ ] Vehicle bus CAN reader (TWAI normal mode, 500kbps, GPIO 21/22)
-- [ ] Chassis bus CAN reader (MCP2515 SPI, listen-only, TX pin disconnected)
-- [ ] WebSocket server on port 81
-- [ ] Broadcast vehicle bus frames as JSON `{id, data, bus, ts}`
-- [ ] Broadcast chassis bus frames as JSON `{id, data, bus, ts}`
-- [ ] Accept write commands from backend (vehicle bus only)
-- [ ] Refuse chassis bus write commands in firmware (software guard)
-- [ ] WiFi connection with auto-reconnect
+- [x] Vehicle bus CAN reader (TWAI normal mode, 500kbps, GPIO 21/22)
+- [x] Chassis bus CAN reader (MCP2515 SPI, listen-only, TX pin disconnected)
+- [x] WebSocket server on port 81
+- [x] Broadcast vehicle bus frames as JSON `{id, data, bus, ts}`
+- [x] Broadcast chassis bus frames as JSON `{id, data, bus, ts}`
+- [x] Accept write commands from backend (vehicle bus only)
+- [x] Refuse chassis bus write commands in firmware (software guard)
+- [x] WiFi connection with reboot-on-fail recovery
+- [ ] `pio run` compiles clean (needs PlatformIO + internet)
 - [ ] Tested on bench with 2018 Model 3 OBD-II port
 
 ---
@@ -159,9 +160,18 @@
 
 ---
 
+## Android App
+
+**Stack:** Native Kotlin + Jetpack Compose + Gradle (Android Studio project).
+compileSdk 35, minSdk 26. Networking via OkHttp + kotlinx.serialization.
+DataStore for settings. (Replaced the earlier React Native prototype.)
+
+- [ ] `./gradlew assembleDebug` builds clean (needs internet for Maven — build in Android Studio)
+- [ ] Verified running on device / emulator against mock backend
+
 ## Android App — Dashboard
 
-- [x] Battery gauge (SVG arc, color-coded by SOC level)
+- [x] Battery gauge (Compose Canvas arc, animated, color-coded by SOC)
 - [x] MetricCard component (label / value / unit)
 - [x] ChargingIndicator (animated lightning bolt, AC vs DC color)
 - [x] Speed, power, torque row
@@ -176,7 +186,7 @@
 ## Android App — History Screen
 
 - [x] Time range selector (1h / 6h / 24h / 7d)
-- [x] SOC over time chart (VictoryNative line chart)
+- [x] SOC over time chart (Compose Canvas line chart)
 - [x] Power over time chart
 - [ ] Speed over time chart
 - [ ] Trip list view
@@ -247,7 +257,8 @@
 - [x] `README.md`
 - [x] `backend/requirements.txt`
 - [x] `backend/config.yaml`
-- [x] ESP32 PlatformIO project scaffold
+- [x] ESP32 PlatformIO project (modular: main/config/can_vehicle/can_chassis/ws_server)
+- [x] Android native Gradle project + wrapper (opens in Android Studio)
 - [ ] `backend/requirements.txt` — pip install verified clean
-- [ ] Android `npm install` — no dependency conflicts
+- [ ] Android `./gradlew assembleDebug` — compiles without errors
 - [ ] ESP32 `pio run` — compiles without errors

@@ -52,13 +52,21 @@ To connect to a real ESP32, set `mock.enabled: false` and update `esp32.host` in
 
 ### Android App
 
+Native Kotlin + Jetpack Compose project. Open the `android/` folder in
+Android Studio (Ladybug or newer) and let Gradle sync, then Run. Or from the
+command line:
+
 ```bash
 cd android
-npm install
-npx react-native run-android
+./gradlew assembleDebug          # build APK
+./gradlew installDebug           # build + install on connected device
 ```
 
-Open Settings screen in the app and set the backend IP to the machine running `main.py`.
+compileSdk 35 / minSdk 26. First sync downloads dependencies from Google's
+Maven and Maven Central, so it needs internet.
+
+Open the Settings screen in the app and set the backend IP to the machine
+running `main.py`.
 
 ### ESP32 Firmware
 
