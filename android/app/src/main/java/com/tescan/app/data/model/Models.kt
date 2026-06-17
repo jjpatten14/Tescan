@@ -22,6 +22,14 @@ data class VehicleSnapshot(
 )
 
 @Serializable
+data class RawCANFrame(
+    val id: Int,
+    val data: String,  // hex string
+    val bus: String,
+    val ts: Double,
+)
+
+@Serializable
 data class HistoryPoint(
     val ts: Double,
     val soc: Double? = null,
@@ -42,6 +50,7 @@ enum class ConnectionStatus { CONNECTING, CONNECTED, DISCONNECTED }
 
 @Serializable
 data class WriteFrameRequest(
+    val action: String = "write",
     val bus: String,
     val id: Int,
     val data: String,
