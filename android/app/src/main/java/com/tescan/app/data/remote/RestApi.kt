@@ -3,6 +3,7 @@ package com.tescan.app.data.remote
 import com.tescan.app.data.model.HealthStatus
 import com.tescan.app.data.model.HistoryPoint
 import com.tescan.app.data.model.VehicleSnapshot
+import com.tescan.app.data.model.WriteFrameRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
@@ -45,10 +46,10 @@ class RestApi(private val json: Json) {
 
     /** Sends a CAN write command (vehicle bus only; backend rejects chassis). */
     suspend fun writeFrame(host: String, id: Int, data: String) = withContext(Dispatchers.IO) {
-        val body = """{"bus":"vehicle","id":$id,"data":"$data"}""".toRequestBody(jsonMedia)
+        val payload = json.encodeToString(WriteFrameRequest.serializer(), WriteFrameRequest("vehicle", id, data))
         val request = Request.Builder()
             .url("http://$host/api/v1/write")
-            .post(body)
+            .post(payload.toRequestBody(jsonMedia))
             .build()
         client.newCall(request).execute().use { resp ->
             if (!resp.isSuccessful) throw RuntimeException("write failed: ${resp.code}")

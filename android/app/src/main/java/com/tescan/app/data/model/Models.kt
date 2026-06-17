@@ -39,3 +39,10 @@ data class HealthStatus(
 )
 
 enum class ConnectionStatus { CONNECTING, CONNECTED, DISCONNECTED }
+
+@Serializable
+data class WriteFrameRequest(
+    val bus: String,
+    val id: Int,
+    val data: String,
+)

@@ -92,6 +92,10 @@ class ESP32Client:
         await self._ws.send(payload)
         logger.debug(f"Sent write: id=0x{cmd.id:X} data={cmd.data} bus={cmd.bus}")
 
+    def update_host(self, host: str, port: int):
+        self._uri = f"ws://{host}:{port}"
+        logger.info(f"ESP32 URI updated to {self._uri}")
+
     def stop(self):
         self._running = False
 

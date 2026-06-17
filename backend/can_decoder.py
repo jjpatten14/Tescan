@@ -86,32 +86,27 @@ class CANDecoder:
         charge_status_raw = g("BMS_chargeStatus")
         max_discharge = g("BMS_maxDischargePower")
 
-        # Derived: instantaneous power from torque and speed
-        # P(kW) = T(Nm) * ω(rad/s) / 1000, where ω = v(mph) * 1.60934 / 3.6 / wheel_radius
-        # Simplified proxy using discharge power signal; torque gives sign
+        # Instantaneous power: P(kW) = T(Nm) × ω_motor(rad/s) / 1000
+        # ω_motor = v_vehicle(m/s) × gear_ratio / r_wheel
+        # Model 3 LR single-motor: gear_ratio=9.034, r_wheel=0.334 m
+        # Positive torque = drive/discharge; negative = regen
         power_kw: Optional[float] = None
-        if max_discharge is not None and speed_mph is not None:
-            regen = g("BMS_maxRegenPower")
-            if speed_mph < 0.5 and regen is not None:
-                power_kw = -regen
-            else:
-                power_kw = max_discharge
-            # sign from torque
-            if torque is not None and torque < 0:
-                power_kw = -abs(power_kw)
+        if torque is not None and speed_mph is not None:
+            speed_ms = speed_mph * 0.44704
+            omega_motor = speed_ms * 9.034 / 0.334
+            power_kw = torque * omega_motor / 1000.0
 
         # Range estimation: use rated range × SOC if no direct signal
         estimated_range_km: Optional[float] = None
         if soc is not None:
             estimated_range_km = round(_MODEL3_RATED_RANGE_KM * soc / 100.0, 1)
 
-        # Charging state
+        # Charging state — charge_rate_kw requires a dedicated charging power signal
+        # not present in this DBC revision; left as None until validated signal is added
         charging_state: Optional[str] = None
         charge_rate_kw: Optional[float] = None
         if charge_status_raw is not None:
             charging_state = _CHARGE_STATUS.get(int(charge_status_raw), "idle")
-            if charging_state != "idle" and max_discharge is not None:
-                charge_rate_kw = max_discharge
 
         # Door status
         doors: Optional[dict] = None

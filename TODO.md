@@ -21,13 +21,13 @@
 
 ## Backend — Core
 
-- [ ] CAN decoder with Tesla Model 3 2018 DBC signals
-- [ ] Mock data source (simulate drive + charge cycle without hardware)
-- [ ] ESP32 WebSocket client with auto-reconnect
-- [ ] SQLite storage (snapshots + raw frames)
-- [ ] Snapshot logger (1 snapshot/sec to DB)
-- [ ] Data retention / purge (configurable, default 30 days)
-- [ ] Config file (YAML) for ESP32 IP, mock mode, DB path
+- [x] CAN decoder with Tesla Model 3 2018 DBC signals
+- [x] Mock data source (simulate drive + charge cycle without hardware)
+- [x] ESP32 WebSocket client with auto-reconnect
+- [x] SQLite storage (snapshots + raw frames)
+- [x] Snapshot logger (1 snapshot/sec to DB)
+- [x] Data retention / purge (configurable, default 30 days)
+- [x] Config file (YAML) for ESP32 IP, mock mode, DB path
 
 ---
 

@@ -109,7 +109,8 @@ class MockCANSource:
             }),
             encode("BMS_powerAvailable", {
                 "BMS_maxRegenPower": 50.0,
-                "BMS_maxDischargePower": round(self._charge_kw if self._charging else abs(self._torque * self._speed * 0.001), 2),
+                # Max available discharge power — SOC-scaled, not instantaneous consumption
+                "BMS_maxDischargePower": round(200.0 * (self._soc / 100.0), 1),
             }),
             encode("BMS_status", {
                 "BMS_chargeStatus": 1 if self._charging else 0,

@@ -50,7 +50,7 @@ async def _main():
     if mock_mode:
         logger.info("Starting in MOCK mode — no hardware required")
         mock_source = MockCANSource(decoder.db, tick_rate=cfg["mock"]["tick_rate"])
-        asyncio.get_event_loop().create_task(mock_source.run(on_frame))
+        asyncio.create_task(mock_source.run(on_frame))
     else:
         logger.info(f"Connecting to ESP32 at {cfg['esp32']['host']}:{cfg['esp32']['port']}")
         esp32_client = ESP32Client(
@@ -59,7 +59,7 @@ async def _main():
             frame_callback=on_frame,
             reconnect_interval=cfg["esp32"]["reconnect_interval"],
         )
-        asyncio.get_event_loop().create_task(esp32_client.run())
+        asyncio.create_task(esp32_client.run())
 
     # ── Wire into FastAPI ────────────────────────────────────────────────────
     app_module.init(decoder, storage, esp32_client, mock_mode)
@@ -71,8 +71,8 @@ async def _main():
             await storage.log_snapshot(snap)
             await asyncio.sleep(1.0)
 
-    asyncio.get_event_loop().create_task(snapshot_loop())
-    asyncio.get_event_loop().create_task(app_module.broadcast_loop(interval=0.2))
+    asyncio.create_task(snapshot_loop())
+    asyncio.create_task(app_module.broadcast_loop(interval=0.2))
 
     # Daily cleanup
     async def purge_loop():
@@ -80,7 +80,7 @@ async def _main():
             await asyncio.sleep(86400)
             await storage.purge_old_data()
 
-    asyncio.get_event_loop().create_task(purge_loop())
+    asyncio.create_task(purge_loop())
 
     # ── Serve ────────────────────────────────────────────────────────────────
     server_cfg = cfg["server"]

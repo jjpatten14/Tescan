@@ -137,8 +137,7 @@ async def write_can(cmd: WriteCANCommand):
 async def update_settings(host: str, port: int = 81):
     """Update ESP32 connection settings at runtime (takes effect on next reconnect)."""
     if _esp32 is not None:
-        _esp32._uri = f"ws://{host}:{port}"
-        logger.info(f"ESP32 URI updated to ws://{host}:{port}")
+        _esp32.update_host(host, port)
     return {"ok": True}
 
 
