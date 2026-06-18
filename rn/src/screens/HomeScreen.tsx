@@ -3,15 +3,12 @@ import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import {
   Lock, Unlock, Fan, Zap, ZapOff, CircleDot, Disc,
   MapPin, Thermometer, Battery, ShieldCheck, Route, Gauge,
-  RefreshCw,
 } from 'lucide-react-native';
 import { Gauge270 } from '../components/Gauge270';
 import { ToggleCtl } from '../components/ToggleCtl';
 import { Module } from '../components/Module';
 import { useVehicleStore } from '../store/vehicleStore';
 import { T, DISP, MONO, RATED_MILES } from '../theme';
-
-type RangeMode = 'rated' | 'predicted';
 
 function cToF(c: number) { return Math.round(c * 9 / 5 + 32); }
 
@@ -20,25 +17,12 @@ export function HomeScreen({ navigation }: any) {
   const [locked,    setLocked]  = useState(true);
   const [climateOn, setClimate] = useState(false);
   const [portOpen,  setPort]    = useState(false);
-  const [rangeMode, setRangeMode] = useState<RangeMode>('rated');
+  // Default: show predicted miles. Tap gauge to flip to SOC %.
+  const [showMiles, setShowMiles] = useState(true);
 
   const soc      = snap.soc ?? 0;
   const charging = snap.charging_state !== 'idle' && snap.charging_state !== null;
   const low      = soc < 15;
-
-  // Rated range — SOC × rated full range
-  const ratedMiles = Math.round((soc / 100) * RATED_MILES);
-
-  // Predicted range — from rolling Wh/mile efficiency
-  const predictedMiles = snap.predictive_range_miles !== null
-    ? Math.round(snap.predictive_range_miles)
-    : null;
-
-  // What to show below the gauge
-  const showPredicted = rangeMode === 'predicted' && predictedMiles !== null;
-  const rangeDisplay  = showPredicted ? predictedMiles! : ratedMiles;
-  const rangeSuffix   = showPredicted ? ' mi est.' : ' mi rated';
-  const rangeColor    = showPredicted ? T.green : T.cyan;
 
   const energyStr = snap.energy_remaining_kwh !== null
     ? `${snap.energy_remaining_kwh.toFixed(1)} kWh`
@@ -58,37 +42,34 @@ export function HomeScreen({ navigation }: any) {
     ? `${snap.battery_health_pct.toFixed(1)}%`
     : '—';
 
+  const healthColor = snap.battery_health_pct === null ? T.mid
+    : snap.battery_health_pct > 90 ? T.green
+    : snap.battery_health_pct > 80 ? T.amber
+    : T.red;
+
   return (
     <ScrollView style={s.scroll} contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
 
-      {/* ── Hero gauge ── */}
-      <View style={s.hero}>
-        <Gauge270 level={soc} limit={settings.chargeLimit} charging={charging} low={low} />
-
-        {/* Tap-to-toggle range strip */}
-        <Pressable onPress={() => setRangeMode(m => m === 'rated' ? 'predicted' : 'rated')}
-          style={s.rangeToggle}>
-          <Text style={[s.rangeBig, { color: rangeColor }]}>
-            {rangeDisplay}{rangeSuffix}
-          </Text>
-          {energyStr && (
-            <Text style={s.rangeKwh}>{energyStr}</Text>
-          )}
-          <View style={s.toggleHint}>
-            <RefreshCw size={11} color={T.lo} />
-            <Text style={s.toggleHintTxt}>
-              {rangeMode === 'rated' ? 'tap for predicted' : 'tap for rated'}
-            </Text>
-          </View>
-        </Pressable>
-
-        {/* Mini stats */}
+      {/* ── Hero — tap anywhere on gauge to flip miles ↔ % ── */}
+      <Pressable onPress={() => setShowMiles(m => !m)} style={s.hero}>
+        <Gauge270
+          level={soc}
+          limit={settings.chargeLimit}
+          charging={charging}
+          low={low}
+          showMiles={showMiles}
+          predictiveMiles={snap.predictive_range_miles}
+        />
+        {/* Mini stats row below gauge */}
         <View style={s.miniStats}>
           <Text style={s.miniTxt}>{snap.power_kw !== null ? `${snap.power_kw.toFixed(1)} kW` : '—'}</Text>
-          <Text style={s.miniTxt}>{snap.torque_nm !== null ? `${Math.round(snap.torque_nm)} Nm` : '—'}</Text>
+          <Text style={s.miniTxt}>{snap.avg_wh_per_mile !== null ? `${Math.round(snap.avg_wh_per_mile)} Wh/mi` : '—'}</Text>
           <Text style={s.miniTxt}>{tempStr}</Text>
         </View>
-      </View>
+        {energyStr && (
+          <Text style={s.energyTxt}>{energyStr}</Text>
+        )}
+      </Pressable>
 
       {/* ── Quick controls ── */}
       <View style={s.controls}>
@@ -124,15 +105,8 @@ export function HomeScreen({ navigation }: any) {
             label="Climate" value={`${snap.cabin_temp !== null ? cToF(snap.cabin_temp) : '74'}°F`}
             sub={climateOn ? 'On' : 'Off'} accent={climateOn ? T.cyan : T.mid}
             onPress={() => navigation.navigate('Climate')} />
-          <Module icon={<ShieldCheck size={22} color={
-              snap.battery_health_pct === null ? T.mid :
-              snap.battery_health_pct > 90 ? T.green :
-              snap.battery_health_pct > 80 ? T.amber : T.red
-            } />}
-            label="Batt. Health" value={healthStr}
-            accent={snap.battery_health_pct === null ? T.mid :
-              snap.battery_health_pct > 90 ? T.green :
-              snap.battery_health_pct > 80 ? T.amber : T.red}
+          <Module icon={<ShieldCheck size={22} color={healthColor} />}
+            label="Batt. Health" value={healthStr} accent={healthColor}
             onPress={() => navigation.navigate('BatteryHealth')} />
           <Module icon={<Zap size={22} color={charging ? T.amber : T.mid} />}
             label="Charges" value={charging ? snap.charging_state!.toUpperCase() : '17h ago'}
@@ -142,7 +116,7 @@ export function HomeScreen({ navigation }: any) {
         <View style={s.gridCol}>
           <Module icon={<Battery size={22} color={charging ? T.amber : T.cyan} />}
             label="Battery" value={`${Math.round(soc)}%`}
-            sub={energyStr ?? `${ratedMiles} mi`}
+            sub={energyStr ?? `${Math.round((soc / 100) * RATED_MILES)} mi`}
             accent={charging ? T.amber : T.cyan}
             onPress={() => navigation.navigate('Battery')} />
           <Module icon={<Route size={22} color={T.mid} />}
@@ -157,57 +131,35 @@ export function HomeScreen({ navigation }: any) {
 }
 
 const s = StyleSheet.create({
-  scroll: { flex: 1 },
+  scroll:  { flex: 1 },
   content: { paddingBottom: 8 },
-  hero: { alignItems: 'center', paddingTop: 8 },
-  rangeToggle: {
+  hero: {
     alignItems: 'center',
-    marginTop: -4,
-    marginBottom: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: T.border,
-    backgroundColor: T.panel,
-    gap: 2,
-  },
-  rangeBig: {
-    fontFamily: MONO,
-    fontSize: 20,
-    fontWeight: '700',
-  },
-  rangeKwh: {
-    fontFamily: MONO,
-    fontSize: 12,
-    color: T.mid,
-  },
-  toggleHint: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 2,
-  },
-  toggleHintTxt: {
-    fontFamily: DISP,
-    fontSize: 10,
-    color: T.lo,
+    paddingTop: 8,
+    paddingBottom: 4,
   },
   miniStats: {
     flexDirection: 'row',
     gap: 24,
-    marginBottom: 4,
+    marginTop: -4,
   },
   miniTxt: {
     fontFamily: MONO,
     fontSize: 12,
     color: T.mid,
   },
+  energyTxt: {
+    fontFamily: MONO,
+    fontSize: 13,
+    color: T.lo,
+    marginTop: 4,
+    marginBottom: 4,
+  },
   controls: {
     flexDirection: 'row',
     gap: 8,
     marginHorizontal: 20,
-    marginTop: 4,
+    marginTop: 8,
   },
   addrRow: {
     flexDirection: 'row',

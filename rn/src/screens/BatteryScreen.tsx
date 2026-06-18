@@ -32,7 +32,8 @@ export function BatteryScreen() {
   return (
     <ScrollView style={s.scroll} contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
       <View style={s.gaugeWrap}>
-        <Gauge270 level={soc} limit={settings.chargeLimit} charging={charging} low={low} />
+        <Gauge270 level={soc} limit={settings.chargeLimit} charging={charging} low={low}
+          showMiles={false} predictiveMiles={snap.predictive_range_miles} />
       </View>
 
       <View style={s.grid}>

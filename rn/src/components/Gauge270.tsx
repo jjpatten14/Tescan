@@ -3,11 +3,11 @@ import { Animated } from 'react-native';
 import Svg, { Circle, G, Line, Text as ST } from 'react-native-svg';
 import { T, RATED_MILES } from '../theme';
 
-const SIZE = 248;
-const R    = 100;
-const CX   = SIZE / 2;
-const CY   = SIZE / 2;
-const C    = 2 * Math.PI * R;
+const SIZE  = 248;
+const R     = 100;
+const CX    = SIZE / 2;
+const CY    = SIZE / 2;
+const C     = 2 * Math.PI * R;
 const SWEEP = 0.75; // 270 degrees
 
 function polar(rad: number, deg: number): [number, number] {
@@ -16,14 +16,17 @@ function polar(rad: number, deg: number): [number, number] {
 }
 
 interface Props {
-  level: number;   // 0–100
-  limit: number;   // charge limit 0–100
+  level: number;           // SOC 0–100 — always drives the arc fill
+  limit: number;           // charge limit tick 0–100
   charging: boolean;
   low: boolean;
+  // Display mode — tap on HomeScreen toggles this
+  showMiles: boolean;      // true = show predicted miles in centre; false = show SOC%
+  predictiveMiles: number | null; // null until 30-mile efficiency window fills
 }
 
-export function Gauge270({ level, limit, charging, low }: Props) {
-  const arcColor = charging ? T.amber : low ? T.red : T.cyan;
+export function Gauge270({ level, limit, charging, low, showMiles, predictiveMiles }: Props) {
+  const arcColor  = charging ? T.amber : low ? T.red : T.cyan;
   const trackDash = `${SWEEP * C} ${(1 - SWEEP) * C}`;
   const fillDash  = `${(level / 100) * SWEEP * C} ${C}`;
 
@@ -46,7 +49,24 @@ export function Gauge270({ level, limit, charging, low }: Props) {
     }
   }, [charging, fadeAnim]);
 
-  const rangeVal = Math.round((level / 100) * RATED_MILES);
+  // Centre readout
+  const ratedMiles = Math.round((level / 100) * RATED_MILES);
+  const hasPredicted = predictiveMiles !== null;
+
+  // Miles mode: show predicted if available, rated as fallback
+  const milesValue  = hasPredicted ? Math.round(predictiveMiles!) : ratedMiles;
+  const milesColor  = hasPredicted ? T.green : arcColor;
+  const milesLabel  = hasPredicted ? 'PREDICTED RANGE' : 'RATED RANGE';
+
+  // What goes in the big number slot
+  const bigText   = showMiles ? `${milesValue}` : `${Math.round(level)}`;
+  const bigColor  = showMiles ? milesColor : T.hi;
+  const topLabel  = showMiles ? milesLabel : 'STATE OF CHARGE';
+  const topColor  = showMiles ? milesColor : T.mid;
+
+  // Sub-line below the big number
+  const subText   = showMiles ? `${Math.round(level)}% · tap for %` : `${ratedMiles} mi · tap for miles`;
+  const subColor  = T.lo;
 
   return (
     <Animated.View style={{ opacity: charging ? fadeAnim : 1 }}>
@@ -56,31 +76,42 @@ export function Gauge270({ level, limit, charging, low }: Props) {
           <Circle cx={CX} cy={CY} r={R} fill="none"
             stroke={T.border} strokeWidth={12}
             strokeLinecap="round" strokeDasharray={trackDash} />
-          {/* fill */}
+          {/* fill — always based on SOC */}
           <Circle cx={CX} cy={CY} r={R} fill="none"
             stroke={arcColor} strokeWidth={12}
             strokeLinecap="round" strokeDasharray={fillDash} />
         </G>
+
         {/* charge limit tick */}
         <Line x1={t1x} y1={t1y} x2={t2x} y2={t2y}
           stroke={T.hi} strokeWidth={2.5} strokeLinecap="round" opacity={0.85} />
-        {/* SOC number */}
-        <ST x={CX} y={CY - 6} textAnchor="middle"
-          fill={T.hi} fontSize={52} fontWeight="700">
-          {Math.round(level)}
-        </ST>
-        {/* label */}
+
+        {/* top label */}
         <ST x={CX} y={CY - 46} textAnchor="middle"
-          fill={T.mid} fontSize={11} letterSpacing={2}>
-          STATE OF CHARGE
+          fill={topColor} fontSize={11} letterSpacing={2}>
+          {topLabel}
         </ST>
-        {/* range */}
+
+        {/* big centre number */}
+        <ST x={CX} y={CY + 6} textAnchor="middle"
+          fill={bigColor} fontSize={52} fontWeight="700">
+          {bigText}
+        </ST>
+
+        {/* unit label just below big number */}
         <ST x={CX} y={CY + 30} textAnchor="middle"
-          fill={arcColor} fontSize={16} fontWeight="500">
-          {rangeVal} mi
+          fill={bigColor} fontSize={13} fontWeight="500">
+          {showMiles ? 'miles' : '%'}
         </ST>
+
+        {/* sub-line hint */}
+        <ST x={CX} y={CY + 52} textAnchor="middle"
+          fill={subColor} fontSize={10} letterSpacing={1}>
+          {subText}
+        </ST>
+
         {charging && (
-          <ST x={CX} y={CY + 56} textAnchor="middle"
+          <ST x={CX} y={CY + 70} textAnchor="middle"
             fill={T.amber} fontSize={11} letterSpacing={2}>
             ⚡ CHARGING
           </ST>
