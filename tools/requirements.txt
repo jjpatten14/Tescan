@@ -1,0 +1,4 @@
+# Tescan laptop tools (SavvyCAN BLE bridge, diagram generator)
+bleak>=0.22.0
+pyserial>=3.5
+matplotlib>=3.8.0

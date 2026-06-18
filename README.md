@@ -76,6 +76,26 @@ The ESP32 connects to the OBD-II port (vehicle bus only):
 - **Vehicle bus** (OBD pin 6/14): 500kbps, bidirectional, TWAI controller
 - **Power** (OBD pin 16): +12V → 3A fuse → 1N5819 → LM2596 5V → ESP32 VIN
 
+## SavvyCAN over Bluetooth (reverse engineering)
+
+For discovering and validating CAN signal bit positions, connect [SavvyCAN](https://github.com/collin80/SavvyCAN) to the ESP32 **without WiFi or USB to the car**. `tools/savvycan_bridge.py` connects to the ESP32 over BLE and re-exposes the stream as a standard SLCAN/LAWICEL serial port that SavvyCAN opens directly. The ESP32 firmware is unchanged — the bridge translates the existing JSON frames to SLCAN and converts SavvyCAN transmits back to JSON writes.
+
+```
+[ESP32 BLE NUS]  --BLE-->  [savvycan_bridge.py]  --virtual serial-->  [SavvyCAN]
+```
+
+```bash
+pip install -r tools/requirements.txt
+
+# Linux / macOS — prints a pty path, point SavvyCAN at it
+python3 tools/savvycan_bridge.py
+
+# Windows — install com0com (virtual COM pair), bind one end
+python3 tools/savvycan_bridge.py --port COM5
+```
+
+In SavvyCAN: **Connection → Add Device → Serial (LAWICEL/SLCAN)**, select the printed port. The ESP32 runs fixed at 500 kbps so bitrate selection is ignored.
+
 ## DBC Files
 
 CAN signal definitions in `backend/dbc/tesla_model3.dbc` are based on the [commaai/opendbc](https://github.com/commaai/opendbc) project (MIT license). The Android `CanDecoder.kt` implements the same signal extractions locally. Validate bit positions against that source before use with real hardware.

@@ -96,6 +96,18 @@
 
 ---
 
+## SavvyCAN — Reverse Engineering (over Bluetooth)
+
+- [x] `tools/savvycan_bridge.py` — BLE NUS → SLCAN virtual serial bridge
+- [x] JSON frame → SLCAN translation (ESP32 → SavvyCAN)
+- [x] SLCAN transmit → JSON write translation (SavvyCAN → ESP32)
+- [x] SLCAN handshake answered locally (O/C/S/V/N/F)
+- [x] pty (Linux/macOS) + com0com serial (Windows) endpoints
+- [x] No firmware change needed — bridge translates the existing JSON
+- [ ] Verified: SavvyCAN connects and shows live Tesla frames
+
+---
+
 ## Chassis Bus (Satellite ESP32) — Deferred
 
 - [ ] Deferred — satellite ESP32 under seat
