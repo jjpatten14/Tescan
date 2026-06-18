@@ -12,17 +12,107 @@ import { T, DISP, MONO, RATED_MILES } from '../theme';
 
 function cToF(c: number) { return Math.round(c * 9 / 5 + 32); }
 
+// ── Efficiency delta bar ──────────────────────────────────────────────────────
+// Shows how many miles your driving habits are adding or costing vs. rated range.
+// Bar extends RIGHT (green) for gains, LEFT (amber) for losses from a center zero line.
+const MAX_DELTA_MI = 40; // ± 40 miles = full bar extent
+
+function EfficiencyDeltaBar({ predictiveMiles, ratedMiles }: {
+  predictiveMiles: number;
+  ratedMiles: number;
+}) {
+  const delta      = predictiveMiles - ratedMiles;
+  const isGain     = delta >= 0;
+  const absDelta   = Math.abs(delta);
+  const fillPct    = Math.min(1, absDelta / MAX_DELTA_MI) * 100;
+  const barColor   = isGain ? T.green : T.amber;
+  const sign       = isGain ? '+' : '−';
+  const verb       = isGain ? 'habits adding range' : 'habits costing range';
+
+  return (
+    <View style={d.wrap}>
+      {/* Zero-centered bar */}
+      <View style={d.track}>
+        {/* Left half — fills from right edge toward center when losing */}
+        <View style={d.half}>
+          {!isGain && (
+            <View style={[d.fill, {
+              width: `${fillPct}%` as any,
+              backgroundColor: barColor,
+              alignSelf: 'flex-end',
+              borderTopLeftRadius: 3,
+              borderBottomLeftRadius: 3,
+            }]} />
+          )}
+        </View>
+
+        {/* Center divider */}
+        <View style={d.center} />
+
+        {/* Right half — fills from left edge toward right when gaining */}
+        <View style={d.half}>
+          {isGain && (
+            <View style={[d.fill, {
+              width: `${fillPct}%` as any,
+              backgroundColor: barColor,
+              alignSelf: 'flex-start',
+              borderTopRightRadius: 3,
+              borderBottomRightRadius: 3,
+            }]} />
+          )}
+        </View>
+      </View>
+
+      {/* Text below */}
+      <View style={d.row}>
+        <Text style={[d.delta, { color: barColor }]}>
+          {sign}{Math.round(absDelta)} mi
+        </Text>
+        <Text style={d.verb}> · {verb}</Text>
+      </View>
+    </View>
+  );
+}
+
+const d = StyleSheet.create({
+  wrap: { width: '85%', alignSelf: 'center', marginTop: 2, marginBottom: 6, gap: 6 },
+  track: {
+    flexDirection: 'row',
+    height: 6,
+    borderRadius: 3,
+    overflow: 'hidden',
+    backgroundColor: 'transparent',
+    gap: 0,
+  },
+  half: {
+    flex: 1,
+    backgroundColor: T.border,
+    overflow: 'hidden',
+    flexDirection: 'row',
+  },
+  center: { width: 2, backgroundColor: T.mid },
+  fill:   { height: 6 },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'baseline',
+  },
+  delta: { fontFamily: MONO, fontSize: 12, fontWeight: '700' },
+  verb:  { fontFamily: DISP, fontSize: 11, color: T.lo },
+});
+
+// ── Home screen ───────────────────────────────────────────────────────────────
 export function HomeScreen({ navigation }: any) {
   const { snap, settings, sendLockCmd, sendClimateCmd, sendChargeCmd, sendPortCmd } = useVehicleStore();
   const [locked,    setLocked]  = useState(true);
   const [climateOn, setClimate] = useState(false);
   const [portOpen,  setPort]    = useState(false);
-  // Default: show predicted miles. Tap gauge to flip to SOC %.
   const [showMiles, setShowMiles] = useState(true);
 
   const soc      = snap.soc ?? 0;
   const charging = snap.charging_state !== 'idle' && snap.charging_state !== null;
   const low      = soc < 15;
+  const ratedMiles = Math.round((soc / 100) * RATED_MILES);
 
   const energyStr = snap.energy_remaining_kwh !== null
     ? `${snap.energy_remaining_kwh.toFixed(1)} kWh`
@@ -39,18 +129,16 @@ export function HomeScreen({ navigation }: any) {
     : '—';
 
   const healthStr = snap.battery_health_pct !== null
-    ? `${snap.battery_health_pct.toFixed(1)}%`
-    : '—';
+    ? `${snap.battery_health_pct.toFixed(1)}%` : '—';
 
   const healthColor = snap.battery_health_pct === null ? T.mid
     : snap.battery_health_pct > 90 ? T.green
-    : snap.battery_health_pct > 80 ? T.amber
-    : T.red;
+    : snap.battery_health_pct > 80 ? T.amber : T.red;
 
   return (
     <ScrollView style={s.scroll} contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
 
-      {/* ── Hero — tap anywhere on gauge to flip miles ↔ % ── */}
+      {/* ── Hero — tap gauge to flip miles ↔ % ── */}
       <Pressable onPress={() => setShowMiles(m => !m)} style={s.hero}>
         <Gauge270
           level={soc}
@@ -60,16 +148,23 @@ export function HomeScreen({ navigation }: any) {
           showMiles={showMiles}
           predictiveMiles={snap.predictive_range_miles}
         />
-        {/* Mini stats row below gauge */}
-        <View style={s.miniStats}>
-          <Text style={s.miniTxt}>{snap.power_kw !== null ? `${snap.power_kw.toFixed(1)} kW` : '—'}</Text>
-          <Text style={s.miniTxt}>{snap.avg_wh_per_mile !== null ? `${Math.round(snap.avg_wh_per_mile)} Wh/mi` : '—'}</Text>
-          <Text style={s.miniTxt}>{tempStr}</Text>
-        </View>
-        {energyStr && (
-          <Text style={s.energyTxt}>{energyStr}</Text>
-        )}
       </Pressable>
+
+      {/* ── Efficiency delta bar — only shown once rolling window has data ── */}
+      {snap.predictive_range_miles !== null && (
+        <EfficiencyDeltaBar
+          predictiveMiles={Math.round(snap.predictive_range_miles)}
+          ratedMiles={ratedMiles}
+        />
+      )}
+
+      {/* Mini stats */}
+      <View style={s.miniStats}>
+        <Text style={s.miniTxt}>{snap.power_kw !== null ? `${snap.power_kw.toFixed(1)} kW` : '—'}</Text>
+        <Text style={s.miniTxt}>{snap.avg_wh_per_mile !== null ? `${Math.round(snap.avg_wh_per_mile)} Wh/mi` : '—'}</Text>
+        <Text style={s.miniTxt}>{tempStr}</Text>
+        {energyStr && <Text style={s.miniTxt}>{energyStr}</Text>}
+      </View>
 
       {/* ── Quick controls ── */}
       <View style={s.controls}>
@@ -116,7 +211,7 @@ export function HomeScreen({ navigation }: any) {
         <View style={s.gridCol}>
           <Module icon={<Battery size={22} color={charging ? T.amber : T.cyan} />}
             label="Battery" value={`${Math.round(soc)}%`}
-            sub={energyStr ?? `${Math.round((soc / 100) * RATED_MILES)} mi`}
+            sub={energyStr ?? `${ratedMiles} mi`}
             accent={charging ? T.amber : T.cyan}
             onPress={() => navigation.navigate('Battery')} />
           <Module icon={<Route size={22} color={T.mid} />}
@@ -133,33 +228,22 @@ export function HomeScreen({ navigation }: any) {
 const s = StyleSheet.create({
   scroll:  { flex: 1 },
   content: { paddingBottom: 8 },
-  hero: {
-    alignItems: 'center',
-    paddingTop: 8,
-    paddingBottom: 4,
-  },
+  hero:    { alignItems: 'center', paddingTop: 8 },
   miniStats: {
     flexDirection: 'row',
-    gap: 24,
-    marginTop: -4,
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 16,
+    marginTop: 2,
+    marginBottom: 10,
+    paddingHorizontal: 20,
   },
-  miniTxt: {
-    fontFamily: MONO,
-    fontSize: 12,
-    color: T.mid,
-  },
-  energyTxt: {
-    fontFamily: MONO,
-    fontSize: 13,
-    color: T.lo,
-    marginTop: 4,
-    marginBottom: 4,
-  },
+  miniTxt: { fontFamily: MONO, fontSize: 12, color: T.mid },
   controls: {
     flexDirection: 'row',
     gap: 8,
     marginHorizontal: 20,
-    marginTop: 8,
+    marginTop: 4,
   },
   addrRow: {
     flexDirection: 'row',
