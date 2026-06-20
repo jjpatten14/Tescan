@@ -27,7 +27,7 @@ export function BatteryScreen() {
     ? `${cToF(snap.battery_temp_min)}–${cToF(snap.battery_temp_max)}°F`
     : '—°F';
 
-  const ampsStr = charging ? '+24.3 A' : snap.speed_mph !== null ? '-0.4 A' : '— A';
+  const ampsStr = '—'; // Amperage not available via CAN
 
   return (
     <ScrollView style={s.scroll} contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
@@ -42,7 +42,7 @@ export function BatteryScreen() {
         <Stat icon={<Route size={20} color={T.mid} />} label="RANGE"
           value={`${rangeMi} mi`} />
         <Stat icon={<Ghost size={20} color={T.mid} />} label="DRAIN"
-          value="1.13%" />
+          value="—" />
         <Stat icon={<Zap size={20} color={charging ? T.amber : T.mid} />} label="POWER"
           value={snap.power_kw !== null ? `${snap.power_kw.toFixed(1)} kW` : '— kW'}
           accent={charging ? T.amber : T.mid} />

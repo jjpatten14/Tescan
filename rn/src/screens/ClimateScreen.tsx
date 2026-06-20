@@ -32,7 +32,7 @@ export function ClimateScreen() {
   const [vent,      setVent]    = useState(false);
   const [seats,     setSeats]   = useState({ FL: 0, FR: 0, RL: 0, RR: 0 });
 
-  const cabin = snap.cabin_temp !== null ? Math.round(snap.cabin_temp * 9 / 5 + 32) : 74;
+  const cabin = snap.cabin_temp !== null ? Math.round(snap.cabin_temp * 9 / 5 + 32) : null;
 
   function cycleSeat(seat: keyof typeof seats) {
     setSeats(p => ({ ...p, [seat]: (p[seat]! + 1) % 4 }));
@@ -63,7 +63,7 @@ export function ClimateScreen() {
             <Plus size={28} color={T.cyan} />
           </Pressable>
         </View>
-        <Text style={s.cabinTxt}>cabin now {cabin}°F</Text>
+        <Text style={s.cabinTxt}>{cabin !== null ? `cabin now ${cabin}°F` : 'cabin temp unknown'}</Text>
         <Pressable onPress={toggleClimate}
           style={[s.toggleBtn, climateOn && { backgroundColor: T.cyan, borderColor: 'transparent' }]}>
           <Text style={[s.toggleTxt, { color: climateOn ? T.ink : T.mid }]}>

@@ -188,23 +188,23 @@ export function HomeScreen({ navigation }: any) {
 
       {/* ── Address strip ── */}
       <View style={s.addrRow}>
-        <MapPin size={18} color={T.cyan} />
-        <Text style={s.addr}>421 Addison Rd</Text>
-        <Text style={s.addrSub}>Parked</Text>
+        <MapPin size={18} color={T.mid} />
+        <Text style={s.addr}>—</Text>
+        <Text style={s.addrSub}>No GPS</Text>
       </View>
 
       {/* ── Module grid ── */}
       <View style={s.grid}>
         <View style={s.gridCol}>
           <Module icon={<Thermometer size={22} color={climateOn ? T.cyan : T.mid} />}
-            label="Climate" value={`${snap.cabin_temp !== null ? cToF(snap.cabin_temp) : '74'}°F`}
+            label="Climate" value={snap.cabin_temp !== null ? `${cToF(snap.cabin_temp)}°F` : '—'}
             sub={climateOn ? 'On' : 'Off'} accent={climateOn ? T.cyan : T.mid}
             onPress={() => navigation.navigate('Climate')} />
           <Module icon={<ShieldCheck size={22} color={healthColor} />}
             label="Batt. Health" value={healthStr} accent={healthColor}
             onPress={() => navigation.navigate('BatteryHealth')} />
           <Module icon={<Zap size={22} color={charging ? T.amber : T.mid} />}
-            label="Charges" value={charging ? snap.charging_state!.toUpperCase() : '17h ago'}
+            label="Charges" value={charging ? snap.charging_state!.toUpperCase() : '—'}
             accent={charging ? T.amber : T.mid}
             onPress={() => navigation.navigate('Battery')} />
         </View>
@@ -215,7 +215,7 @@ export function HomeScreen({ navigation }: any) {
             accent={charging ? T.amber : T.cyan}
             onPress={() => navigation.navigate('Battery')} />
           <Module icon={<Route size={22} color={T.mid} />}
-            label="Drives" value="5h ago"
+            label="Drives" value="—"
             onPress={() => navigation.navigate('Log')} />
           <Module icon={<Gauge size={22} color={T.mid} />}
             label="Odometer" value={odomStr} />
