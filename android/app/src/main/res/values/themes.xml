@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- Base theme; actual colors come from the Compose Material3 theme. -->
-    <style name="Theme.Tescan" parent="android:Theme.Material.NoActionBar">
-        <item name="android:statusBarColor">#121212</item>
-        <item name="android:navigationBarColor">#1A1A1A</item>
-        <item name="android:windowBackground">#121212</item>
-    </style>
-</resources>

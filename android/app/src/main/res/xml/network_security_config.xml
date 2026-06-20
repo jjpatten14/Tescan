@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
-  The backend runs on the local network over plain HTTP/WS (no TLS), so cleartext
-  is allowed. Tighten this if you put the backend behind HTTPS.
--->
-<network-security-config>
-    <base-config cleartextTrafficPermitted="true" />
-</network-security-config>
